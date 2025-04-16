@@ -1,13 +1,229 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Website</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Energy Meter Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #0a2342;
+      color: #ffffff;
+    }
+    .sidebar {
+      width: 200px;
+      background: #111d2d;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      padding: 20px;
+    }
+    .sidebar h2 {
+      font-size: 18px;
+      color: #1abc9c;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+    .sidebar ul li {
+      padding: 10px 0;
+      color: #ccc;
+      cursor: pointer;
+    }
+    .main {
+      margin-left: 220px;
+      padding: 20px;
+    }
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .metric {
+      background: #1b3a57;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .metric h4 {
+      margin: 0;
+      color: #1abc9c;
+      font-size: 20px;
+    }
+    .metric span {
+      font-size: 14px;
+      color: #bdc3c7;
+    }
+    .datetime {
+      font-size: 14px;
+      color: #ccc;
+      margin-top: 5px;
+    }
+    .chart-container {
+      margin-top: 40px;
+      background: #1b3a57;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    canvas {
+      background-color: #ffffff;
+      border-radius: 10px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 14px;
+      color: #aaa;
+    }
+  </style>
 </head>
 <body>
-    <p>hello! hi!</p>
-    <img width="100%" src="banner.PNG" alt="">
-    <p>developed by sarvana </p>
+  <div class="sidebar">
+    <h2>SMART ENERGY METER</h2>
+    <ul>
+      <li>Dashboard</li>
+      <li>Live Data</li>
+      <li>Usage History</li>
+      <li>Predictions</li>
+      <li>Settings</li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="dashboard-header">
+      <h1>Dashboard</h1>
+      <div>
+        <div id="datetime" class="datetime"></div>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <h4 id="voltage">-- V</h4>
+        <span>Voltage</span>
+      </div>
+      <div class="metric">
+        <h4 id="current">-- A</h4>
+        <span>Current</span>
+      </div>
+      <div class="metric">
+        <h4 id="power">-- W</h4>
+        <span>Power</span>
+      </div>
+      <div class="metric">
+        <h4 id="energy">-- kWh</h4>
+        <span>Energy</span>
+      </div>
+      <div class="metric">
+        <h4 id="frequency">-- Hz</h4>
+        <span>Frequency</span>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <canvas id="dataChart" height="100"></canvas>
+    </div>
+
+    <div class="footer">
+      <p>@2025     Developed by Saravanamurugan</p>
+    </div>
+  </div>
+
+  <script>
+    // Real-time date and time
+    function updateDateTime() {
+      const now = new Date();
+      const dateTimeStr = now.toLocaleString();
+      document.getElementById("datetime").textContent = dateTimeStr;
+    }
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
+
+    // Chart.js setup
+    const ctx = document.getElementById('dataChart').getContext('2d');
+    const chartData = {
+      labels: [],
+      datasets: [
+        {
+          label: 'Voltage (V)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          data: [],
+          fill: false
+        },
+        {
+          label: 'Current (A)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          data: [],
+          fill: false
+        },
+        {
+          label: 'Power (W)',
+          borderColor: 'rgba(255, 206, 86, 1)',
+          data: [],
+          fill: false
+        },
+        {
+          label: 'Energy (kWh)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          data: [],
+          fill: false
+        },
+        {
+          label: 'Frequency (Hz)',
+          borderColor: 'rgba(153, 102, 255, 1)',
+          data: [],
+          fill: false
+        }
+      ]
+    };
+
+    const dataChart = new Chart(ctx, {
+      type: 'line',
+      data: chartData,
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            labels: {
+              color: '#ffffff'
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#ffffff' }
+          },
+          y: {
+            ticks: { color: '#ffffff' }
+          }
+        }
+      }
+    });
+
+    // Simulate data updates every 2 seconds
+    setInterval(() => {
+      const now = new Date().toLocaleTimeString();
+      if (chartData.labels.length > 20) {
+        chartData.labels.shift();
+        chartData.datasets.forEach(dataset => dataset.data.shift());
+      }
+      chartData.labels.push(now);
+      chartData.datasets[0].data.push(Math.random() * 240 + 10); // Voltage
+      chartData.datasets[1].data.push(Math.random() * 10);       // Current
+      chartData.datasets[2].data.push(Math.random() * 1000);     // Power
+      chartData.datasets[3].data.push(Math.random());            // Energy
+      chartData.datasets[4].data.push(50 + Math.random());       // Frequency
+      dataChart.update();
+    }, 2000);
+  </script>
 </body>
 </html>
